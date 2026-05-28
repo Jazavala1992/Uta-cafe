@@ -48,7 +48,7 @@ export default function ProveedorForm({ onSubmit, onCancel, initialValues, submi
       email: initialValues?.email ?? '',
       direccion: initialValues?.direccion ?? '',
       productos: (initialValues?.productos ?? []).map((producto) => ({
-        id: producto.id || createLocalId(),
+        id: producto.id ?? '',
         nombre: producto.nombre,
       })),
     },
@@ -67,7 +67,7 @@ export default function ProveedorForm({ onSubmit, onCancel, initialValues, submi
       email: initialValues?.email ?? '',
       direccion: initialValues?.direccion ?? '',
       productos: (initialValues?.productos ?? []).map((producto) => ({
-        id: producto.id || createLocalId(),
+        id: producto.id || Math.random().toString(36).slice(2, 11),
         nombre: producto.nombre,
       })),
     });
@@ -79,7 +79,7 @@ export default function ProveedorForm({ onSubmit, onCancel, initialValues, submi
       productos: (values.productos ?? [])
         .filter((producto) => producto.nombre.trim().length > 0)
         .map((producto) => ({
-          id: producto.id,
+          id: producto.id || Math.random().toString(36).slice(2, 11),
           nombre: producto.nombre.trim(),
         })),
       activo: true,

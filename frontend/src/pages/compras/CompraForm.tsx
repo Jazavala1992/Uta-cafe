@@ -57,11 +57,15 @@ export default function CompraForm() {
   const { fields, append, remove } = useFieldArray({ control, name: 'detalle' });
 
   useEffect(() => {
-    const load = async () => {
-      setProveedores(await proveedorService.getAll(false));
+    let mounted = true;
+    (async () => {
+      const proveedoresData = await proveedorService.getAll(false);
+      if (!mounted) return;
+      setProveedores(proveedoresData);
+
       if (id) {
         const orden = await ordenCompraService.getById(id);
-        if (orden) {
+        if (orden && mounted) {
           reset({
             proveedorId: orden.proveedorId,
             fecha: orden.fecha.slice(0, 10),
@@ -77,8 +81,10 @@ export default function CompraForm() {
           });
         }
       }
+    })();
+    return () => {
+      mounted = false;
     };
-    void load();
   }, [id, reset]);
 
   const proveedorId = useWatch({ control, name: 'proveedorId' });

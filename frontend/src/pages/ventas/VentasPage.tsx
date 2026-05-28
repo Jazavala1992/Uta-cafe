@@ -24,6 +24,7 @@ export default function VentasPage() {
   const [closing, setClosing] = useState(false);
 
   const load = async () => setData(await ventaService.getAll(showDeleted));
+
   useEffect(() => {
     void load();
   }, [showDeleted]);

@@ -14,11 +14,16 @@ export default function ReportesPage() {
   const [gastos, setGastos] = useState<Gasto[]>([]);
 
   useEffect(() => {
-    const load = async () => {
-      setVentas(await ventaService.getAll());
-      setGastos(await gastoService.getAll());
+    let mounted = true;
+    (async () => {
+      const [ventasData, gastosData] = await Promise.all([ventaService.getAll(), gastoService.getAll()]);
+      if (!mounted) return;
+      setVentas(ventasData);
+      setGastos(gastosData);
+    })();
+    return () => {
+      mounted = false;
     };
-    void load();
   }, []);
 
   const totalVentas = useMemo(() => ventas.reduce((acc, x) => acc + x.total, 0), [ventas]);

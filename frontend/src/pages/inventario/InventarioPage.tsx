@@ -18,16 +18,20 @@ export default function InventarioPage() {
   const [data, setData] = useState<InventarioRow[]>([]);
 
   useEffect(() => {
-    const load = async () => {
+    let mounted = true;
+    (async () => {
       const productos = await productoService.getAll(false);
+      if (!mounted) return;
       setData(
         productos
           .filter((producto) => producto.activo)
           .map((producto) => toInventarioRow(producto))
           .sort((a, b) => a.productoNombre.localeCompare(b.productoNombre)),
       );
+    })();
+    return () => {
+      mounted = false;
     };
-    void load();
   }, []);
 
   return (

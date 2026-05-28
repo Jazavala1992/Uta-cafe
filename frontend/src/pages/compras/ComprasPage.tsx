@@ -15,8 +15,8 @@ export default function ComprasPage() {
   const addToast = useUiStore((s) => s.addToast);
   const [showDeleted, setShowDeleted] = useState(false);
   const [data, setData] = useState<OrdenCompra[]>([]);
-
   const load = async () => setData(await ordenCompraService.getAll(showDeleted));
+
   useEffect(() => {
     void load();
   }, [showDeleted]);

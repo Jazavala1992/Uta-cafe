@@ -12,8 +12,8 @@ export default function ProveedoresPage() {
   const [data, setData] = useState<Proveedor[]>([]);
   const [openCreate, setOpenCreate] = useState(false);
   const [editing, setEditing] = useState<Proveedor | null>(null);
-
   const load = async () => setData(await proveedorService.getAll(showDeleted));
+
   useEffect(() => {
     void load();
   }, [showDeleted]);

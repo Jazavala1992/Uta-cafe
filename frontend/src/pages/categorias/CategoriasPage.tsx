@@ -12,8 +12,8 @@ export default function CategoriasPage() {
   const [data, setData] = useState<Categoria[]>([]);
   const [openCreate, setOpenCreate] = useState(false);
   const [editing, setEditing] = useState<Categoria | null>(null);
-
   const load = async () => setData(await categoriaService.getAll(showDeleted));
+
   useEffect(() => {
     void load();
   }, [showDeleted]);

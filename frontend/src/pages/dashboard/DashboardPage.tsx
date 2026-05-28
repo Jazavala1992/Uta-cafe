@@ -18,12 +18,21 @@ export default function DashboardPage() {
   const [productos, setProductos] = useState<Producto[]>([]);
 
   useEffect(() => {
-    const load = async () => {
-      setVentas(await ventaService.getAll());
-      setGastos(await gastoService.getAll());
-      setProductos(await productoService.getAll());
+    let mounted = true;
+    (async () => {
+      const [ventasData, gastosData, productosData] = await Promise.all([
+        ventaService.getAll(),
+        gastoService.getAll(),
+        productoService.getAll(),
+      ]);
+      if (!mounted) return;
+      setVentas(ventasData);
+      setGastos(gastosData);
+      setProductos(productosData);
+    })();
+    return () => {
+      mounted = false;
     };
-    void load();
   }, []);
 
   const now = new Date();
