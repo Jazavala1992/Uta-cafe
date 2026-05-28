@@ -1,0 +1,89 @@
+.form {
+  display: grid;
+  gap: 12px;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.grid3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.sourceBlock {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+}
+
+.photoSection {
+  display: grid;
+  gap: 8px;
+}
+
+.photoUploadLabel {
+  display: grid;
+  gap: 6px;
+}
+
+.photoPreviewWrap {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+
+.photoPreview {
+  width: 160px;
+  height: 120px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
+
+.helpText {
+  color: var(--muted);
+}
+
+.quickCategoryWrap {
+  display: grid;
+  gap: 8px;
+}
+
+.quickCategoryBox {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+}
+
+.quickActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.errorText {
+  color: #d11a2a;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+@media (max-width: 900px) {
+  .grid2,
+  .grid3 {
+    grid-template-columns: 1fr;
+  }
+}
