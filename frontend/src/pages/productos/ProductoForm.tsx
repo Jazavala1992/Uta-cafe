@@ -20,7 +20,10 @@ const schema = z.object({
   productoProveedorNombre: z.string().optional(),
   precioUnitario: z.coerce.number().min(0, 'Precio invalido'),
   unidadMedida: z.string().min(1, 'Unidad requerida'),
+  stockActual: z.coerce.number().min(0, 'Stock actual invalido'),
   stockMinimo: z.coerce.number().min(0, 'Stock minimo invalido'),
+  usaStock: z.boolean(),
+  disponible: z.boolean(),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -65,7 +68,10 @@ export default function ProductoForm({
       productoProveedorNombre: initialValues?.productoProveedorNombre ?? '',
       precioUnitario: initialValues?.precioUnitario ?? 0,
       unidadMedida: initialValues?.unidadMedida ?? 'unidad',
+      stockActual: initialValues?.stockActual ?? 0,
       stockMinimo: initialValues?.stockMinimo ?? 0,
+      usaStock: initialValues?.usaStock ?? true,
+      disponible: initialValues?.disponible ?? true,
     }),
     [initialValues, origenInicial],
   );
@@ -87,6 +93,7 @@ export default function ProductoForm({
   const categoriaId = useWatch({ control, name: 'categoriaId' });
   const proveedorId = useWatch({ control, name: 'proveedorId' });
   const productoProveedorId = useWatch({ control, name: 'productoProveedorId' });
+  const usaStock = useWatch({ control, name: 'usaStock' });
 
   const categoriaSeleccionada = useMemo(
     () => categorias.find((categoria) => categoria.id === categoriaId),
@@ -163,8 +170,10 @@ export default function ProductoForm({
           : '',
       precioUnitario: Number(values.precioUnitario),
       unidadMedida: values.unidadMedida.trim() || 'unidad',
-      stockActual: Number(initialValues?.stockActual ?? 0),
+      stockActual: values.usaStock ? Number(values.stockActual) : Number(initialValues?.stockActual ?? 0),
       stockMinimo: Number(values.stockMinimo),
+      usaStock: values.usaStock,
+      disponible: values.disponible,
       activo: true,
     });
 
@@ -340,6 +349,19 @@ export default function ProductoForm({
         </div>
       ) : null}
 
+      <div className={styles.grid2}>
+        <label className={styles.toggleField}>
+          <span>Controla stock real</span>
+          <input type="checkbox" {...register('usaStock')} />
+          <small className={styles.helpText}>Desactivalo para productos preparados que se gestionan por disponibilidad.</small>
+        </label>
+        <label className={styles.toggleField}>
+          <span>Disponible para venta</span>
+          <input type="checkbox" {...register('disponible')} />
+          <small className={styles.helpText}>Si lo desactivas, el producto no aparecera para el cajero.</small>
+        </label>
+      </div>
+
       <div className={styles.grid3}>
         <Input
           label="Precio de venta"
@@ -350,21 +372,37 @@ export default function ProductoForm({
           error={errors.precioUnitario?.message}
         />
         <Input label="Unidad de medida" {...register('unidadMedida')} error={errors.unidadMedida?.message} />
-        <Input label="Stock actual" value={String(initialValues?.stockActual ?? 0)} readOnly />
+        <Input
+          label="Stock actual"
+          type="number"
+          min={0}
+          step="0.01"
+          {...register('stockActual')}
+          error={errors.stockActual?.message}
+          readOnly={!usaStock}
+        />
       </div>
 
-      <small className={styles.helpText}>
-        El stock actual se actualiza automaticamente con compras y notas de venta cerradas.
-      </small>
+      {usaStock ? (
+        <>
+          <small className={styles.helpText}>
+            El stock actual se actualiza automaticamente con compras y notas de venta cerradas.
+          </small>
 
-      <Input
-        label="Stock minimo"
-        type="number"
-        min={0}
-        step="0.01"
-        {...register('stockMinimo')}
-        error={errors.stockMinimo?.message}
-      />
+          <Input
+            label="Stock minimo"
+            type="number"
+            min={0}
+            step="0.01"
+            {...register('stockMinimo')}
+            error={errors.stockMinimo?.message}
+          />
+        </>
+      ) : (
+        <small className={styles.helpText}>
+          Este producto no descuenta stock; solo se controla su disponibilidad desde administracion.
+        </small>
+      )}
 
       <div className={styles.actions}>
         {onCancel ? (

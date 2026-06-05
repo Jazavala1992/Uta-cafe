@@ -53,9 +53,7 @@ export default function ProductosPage() {
 
   const handleUpdate = async (values: Omit<Producto, 'id'>) => {
     if (!editing) return;
-    const payload: Partial<Producto> = { ...values };
-    delete payload.stockActual;
-    await productoService.update(editing.id, payload);
+    await productoService.update(editing.id, values);
     setEditing(null);
     await load();
   };
@@ -86,6 +84,17 @@ export default function ProductosPage() {
           { key: 'nombre', header: 'Nombre' },
           { key: 'categoriaNombre', header: 'Categoria' },
           {
+            key: 'usaStock',
+            header: 'Gestion',
+            render: (row) => (row.usaStock ? <Badge color="success">Con stock</Badge> : <Badge color="muted">Manual</Badge>),
+          },
+          {
+            key: 'disponible',
+            header: 'Disponibilidad',
+            render: (row) =>
+              row.disponible ? <Badge color="success">Disponible</Badge> : <Badge color="danger">No disponible</Badge>,
+          },
+          {
             key: 'origen',
             header: 'Origen',
             render: (row) => (row.origen === 'proveedor' ? 'Proveedor' : 'Interno'),
@@ -110,6 +119,10 @@ export default function ProductosPage() {
             key: 'stockActual',
             header: 'Stock',
             render: (row) => {
+              if (!row.usaStock) {
+                return <Badge color="muted">No aplica</Badge>;
+              }
+
               const stockActual = Number(row.stockActual ?? 0);
               const stockMinimo = Number(row.stockMinimo ?? 0);
 

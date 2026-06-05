@@ -63,7 +63,7 @@ export default function DashboardPage() {
   const ventasMes = ventas.filter((v) => new Date(v.fecha).getMonth() === now.getMonth()).reduce((acc, v) => acc + v.total, 0);
   const gastosMes = gastos.filter((g) => new Date(g.fecha).getMonth() === now.getMonth()).reduce((acc, g) => acc + g.monto, 0);
 
-  const stockBajo = productos.filter((p) => p.stockActual <= p.stockMinimo);
+  const stockBajo = productos.filter((p) => p.usaStock && p.disponible && p.stockActual <= p.stockMinimo);
   const categoriaNombrePorId = useMemo(
     () => new Map(categorias.map((categoria) => [categoria.id, categoria.nombre.trim()])),
     [categorias]

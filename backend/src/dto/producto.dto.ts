@@ -58,6 +58,14 @@ export class CreateProductoDto {
   @IsNumber()
   @Min(0)
   stockMinimo?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  usaStock?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  disponible?: boolean;
 }
 
 export class UpdateProductoDto {
@@ -119,6 +127,14 @@ export class UpdateProductoDto {
   @IsNumber()
   @Min(0)
   stockMinimo?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  usaStock?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  disponible?: boolean;
 
   @IsOptional()
   @IsBoolean()

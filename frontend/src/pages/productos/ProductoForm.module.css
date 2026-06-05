@@ -71,6 +71,21 @@
   gap: 8px;
 }
 
+.toggleField {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+}
+
+.toggleField input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+}
+
 .errorText {
   color: #d11a2a;
 }

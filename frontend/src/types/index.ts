@@ -50,6 +50,8 @@ export interface Producto {
   unidadMedida: string;
   stockActual: number;
   stockMinimo: number;
+  usaStock: boolean;
+  disponible: boolean;
   activo: boolean;
   deletedAt?: string;
 }
