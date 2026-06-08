@@ -1,4 +1,4 @@
-import { IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsNumber, IsOptional, IsString, IsPositive } from 'class-validator';
 
 export class CreateOrdenCompraDto {
   @IsOptional()
@@ -10,6 +10,7 @@ export class CreateOrdenCompraDto {
   proveedorNombre?: string;  // ← agregar esto
 
   @IsNumber()
+  @IsPositive( { message: 'El total debe ser un número positivo' } )
   total!: number;
 
   @IsOptional()
@@ -23,7 +24,7 @@ export class UpdateOrdenCompraDto {
 
   @IsOptional()
   @IsString()
-  proveedorNombre?: string;  // ← agregar esto
+  proveedorNombre?: string;  
 
   @IsOptional()
   @IsNumber()

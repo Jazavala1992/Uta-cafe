@@ -1,10 +1,10 @@
 import { IsNumber, IsOptional, IsString, Min } from 'class-validator';
 
 export class CreateGastoDto {
-  @IsString()
+  @IsString( { message: 'La descripción debe ser texto' } )
   descripcion!: string;
 
-  @IsNumber()
+  @IsNumber({}, { message: 'El monto debe ser un número' })
   @Min(0)
   monto!: number;
 
@@ -14,11 +14,11 @@ export class CreateGastoDto {
 
 export class UpdateGastoDto {
   @IsOptional()
-  @IsString()
+  @IsString({ message: 'La descripción debe ser texto' })
   descripcion?: string;
 
   @IsOptional()
-  @IsNumber()
+  @IsNumber({}, { message: 'El monto debe ser un número' })
   @Min(0)
   monto?: number;
 
