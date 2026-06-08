@@ -1,0 +1,57 @@
+.form {
+  display: grid;
+  gap: 8px;
+}
+
+.multiField {
+  display: grid;
+  gap: 6px;
+}
+
+.multiSelect {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px;
+  font: inherit;
+  background: var(--surface);
+  color: inherit;
+}
+
+.productList {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px;
+  display: grid;
+  gap: 6px;
+  max-height: 220px;
+  overflow: auto;
+}
+
+.productItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.catalogRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: end;
+}
+
+@media (max-width: 900px) {
+  .catalogRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+.helpText {
+  color: var(--muted);
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}

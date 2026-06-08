@@ -1,0 +1,14 @@
+.page {
+  display: grid;
+  gap: 12px;
+}
+
+.form {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 2fr 1fr 1fr 1fr auto;
+}
+
+.submitWrap {
+  align-self: end;
+}

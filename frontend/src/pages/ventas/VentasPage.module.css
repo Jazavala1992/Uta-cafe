@@ -1,0 +1,79 @@
+.page {
+  display: grid;
+  gap: 12px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.closeModalBody {
+  display: grid;
+  gap: 14px;
+}
+
+.closeModalText {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.actionCards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.actionCard {
+  border: 1px solid var(--color-border);
+  background: #fff;
+  border-radius: 12px;
+  padding: 12px;
+  text-align: left;
+  display: grid;
+  gap: 4px;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.actionCard:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: var(--color-primary);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+}
+
+.actionCard:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.actionCardTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.actionCardDescription {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  line-height: 1.35;
+}
+
+.saveCopyOption {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.closeModalActions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (max-width: 680px) {
+  .actionCards {
+    grid-template-columns: 1fr;
+  }
+}

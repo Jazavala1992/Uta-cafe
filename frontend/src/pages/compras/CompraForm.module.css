@@ -1,0 +1,81 @@
+.page {
+  display: grid;
+  gap: 12px;
+}
+
+.form {
+  display: grid;
+  gap: 12px;
+}
+
+.topGrid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.notesField {
+  display: grid;
+  gap: 6px;
+}
+
+.textarea {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.detailSection {
+  display: grid;
+  gap: 8px;
+}
+
+.detailHeader {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 2fr 1fr 1fr 1fr auto;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.detailRow {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 2fr 1fr 1fr 1fr auto;
+}
+
+.fieldCol {
+  display: grid;
+  gap: 4px;
+}
+
+.fieldLabel {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.hintText {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+@media (max-width: 900px) {
+  .detailHeader {
+    display: none;
+  }
+
+  .detailRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+.error {
+  color: var(--color-danger);
+}
+
+.actionRow {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}

@@ -1,0 +1,21 @@
+.card {
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.title {
+  margin-bottom: 12px;
+}
+
+.form {
+  display: grid;
+  gap: 10px;
+  max-width: 560px;
+}
+
+.passwordBlock {
+  display: grid;
+  gap: 0;
+}

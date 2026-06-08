@@ -1,0 +1,43 @@
+.page {
+  width: 100vw;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background-image: linear-gradient(rgba(250, 247, 244, 0.78), rgba(250, 247, 244, 0.78)), url('../../assets/Fondo.png');
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+  overflow: hidden;
+}
+
+.card {
+  width: min(420px, 100%);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(6px);
+}
+
+.logoWrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.logo {
+  width: 120px;
+  height: auto;
+}
+
+.title {
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.form {
+  display: grid;
+  gap: 12px;
+}

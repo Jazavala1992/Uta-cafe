@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: uta-cafe-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: uta_cafe
+    ports:
+      - '5432:5432'
+    volumes:
+      - uta_cafe_pgdata:/var/lib/postgresql/data
+
+volumes:
+  uta_cafe_pgdata:
