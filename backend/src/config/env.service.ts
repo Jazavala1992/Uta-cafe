@@ -17,4 +17,8 @@ export class EnvService {
   readonly aiTimeoutMs: number = Number(process.env.AI_TIMEOUT_MS || 60000);
   // Máximo de items de contexto que se incluirán en prompts para ahorrar tokens
   readonly aiContextMaxItems: number = Number(process.env.AI_CONTEXT_MAX_ITEMS || 30);
+
+  // Credenciales del seed
+  readonly adminPassword: string = process.env.ADMIN_PASSWORD || 'Admin123!';
+  readonly cajeroPassword: string = process.env.CAJERO_PASSWORD || 'Cajero123!';
 }

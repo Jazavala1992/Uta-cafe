@@ -26,7 +26,6 @@ interface NavItem {
 
 const items: NavItem[] = [
   { label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={16} /> },
-  { label: 'Notas de Venta', path: '/ventas', icon: <Receipt size={16} /> },
   { label: 'Mesas', path: '/mesas', icon: <Coffee size={16} /> },
   { label: 'Productos', path: '/productos', icon: <Package size={16} /> },
   { label: 'Categorias', path: '/categorias', icon: <Boxes size={16} /> },
