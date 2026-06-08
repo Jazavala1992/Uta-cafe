@@ -13,7 +13,12 @@ async function bootstrap() {
   app.use(json({ limit: '8mb' }));
   app.use(urlencoded({ extended: true, limit: '8mb' }));
 
-  app.enableCors({ origin: env.corsOrigin });
+  app.enableCors({
+  origin: env.corsOrigin,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+});
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
   await app.listen(env.port);

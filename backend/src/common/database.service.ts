@@ -10,7 +10,12 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   private reconnecting: Promise<void> | null = null;
 
   constructor(private readonly env: EnvService) {
-    this.pool = new Pool({ connectionString: this.env.databaseUrl });
+    this.pool = new Pool({
+    connectionString: this.env.databaseUrl,
+    ssl: this.env.nodeEnv === 'production'
+    ? { rejectUnauthorized: false }
+    : false,
+});
   }
 
   async onModuleInit() {
