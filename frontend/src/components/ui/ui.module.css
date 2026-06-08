@@ -188,6 +188,10 @@
   overflow-y: auto;
 }
 
+.modalContentWide {
+  width: min(920px, calc(100% - 24px));
+}
+
 .modalHeader {
   display: flex;
   justify-content: space-between;
@@ -267,6 +271,10 @@
   border-bottom: 1px solid var(--color-border);
 }
 
+.tableCellCompactActions {
+  text-align: center;
+}
+
 .skeleton {
   height: 20px;
   border-radius: 6px;
@@ -285,6 +293,67 @@
   display: flex;
   gap: 6px;
   align-items: center;
+}
+
+.tableCellCompactActions {
+  text-align: center;
+}
+
+.actionsCellCompact {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.actionsExtraSlot {
+  display: flex;
+  justify-content: center;
+}
+
+.actionsButtonsCompact {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.actionButtonCompact {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  color: var(--text);
+}
+
+.actionButtonCompact:hover {
+  background: #f7f3ef;
+  border-color: #ede2d9;
+  transform: translateY(-1px);
+}
+
+.actionButtonEditCompact {
+  color: var(--text);
+}
+
+.actionButtonDeleteCompact {
+  color: var(--color-danger);
+}
+
+.actionButtonDeleteCompact:hover {
+  background: #fff5f5;
+  border-color: #efc8c8;
+}
+
+.actionButtonRestoreCompact {
+  color: var(--text);
 }
 
 .tableFooter {

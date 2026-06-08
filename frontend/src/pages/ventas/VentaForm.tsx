@@ -274,7 +274,7 @@ export default function VentaForm() {
                   {producto.usaStock ? (
                     <small className={sinStock ? styles.stockDanger : styles.stockInfo}>Stock: {stock}</small>
                   ) : (
-                    <small className={styles.stockInfo}>Disponible manualmente</small>
+                    <small className={styles.stockInfo}>Disponible</small>
                   )}
                 </div>
               </button>

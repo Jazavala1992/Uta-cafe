@@ -170,7 +170,7 @@ export default function ProductoForm({
           : '',
       precioUnitario: Number(values.precioUnitario),
       unidadMedida: values.unidadMedida.trim() || 'unidad',
-      stockActual: values.usaStock ? Number(values.stockActual) : Number(initialValues?.stockActual ?? 0),
+      stockActual: values.usaStock ? Number(values.stockActual) : values.disponible ? 1 : 0,
       stockMinimo: Number(values.stockMinimo),
       usaStock: values.usaStock,
       disponible: values.disponible,
@@ -216,99 +216,116 @@ export default function ProductoForm({
 
   return (
     <form onSubmit={handleSubmit(submit)} className={styles.form}>
-      <div className={styles.grid2}>
-        <Input label="Nombre del producto" {...register('nombre')} error={errors.nombre?.message} />
-        <Select label="Origen del producto" {...register('origen')} error={errors.origen?.message}>
-          <option value="interno">Interno</option>
-          <option value="proveedor">De proveedor</option>
-        </Select>
-      </div>
+      <section className={styles.section}>
+        <div className={styles.sectionHeading}>
+          <h4>1. Datos básicos</h4>
+          <small className={styles.helpText}>Primero define el nombre, la descripción y la foto del producto.</small>
+        </div>
+        <div className={styles.grid2}>
+          <Input label="Nombre del producto" {...register('nombre')} error={errors.nombre?.message} />
+          <Select label="Origen del producto" {...register('origen')} error={errors.origen?.message}>
+            <option value="interno">Interno</option>
+            <option value="proveedor">De proveedor</option>
+          </Select>
+        </div>
 
-      <Input label="Descripcion" {...register('descripcion')} error={errors.descripcion?.message} />
-      <input type="hidden" {...register('fotoUrl')} />
+        <Input label="Descripcion" {...register('descripcion')} error={errors.descripcion?.message} />
+        <input type="hidden" {...register('fotoUrl')} />
 
-      <div className={styles.photoSection}>
-        <label className={styles.photoUploadLabel}>
-          <span>Foto del producto</span>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              if (!file) return;
-              void resizeImageToDataUrl(file, 960, 0.78).then((result) => {
-                setValue('fotoUrl', result, { shouldDirty: true, shouldValidate: true });
-              });
-            }}
-          />
-        </label>
-        {fotoUrl ? (
-          <div className={styles.photoPreviewWrap}>
-            <img src={fotoUrl} alt="Preview del producto" className={styles.photoPreview} />
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => setValue('fotoUrl', '', { shouldDirty: true, shouldValidate: true })}
-            >
-              Quitar foto
-            </Button>
-          </div>
-        ) : null}
-      </div>
-
-      <div className={styles.grid2}>
-        <Select label="Categoria" {...register('categoriaId')} error={errors.categoriaId?.message}>
-          <option value="">Sin categoria</option>
-          {categorias.map((categoria) => (
-            <option key={categoria.id} value={categoria.id}>
-              {categoria.nombre}
-            </option>
-          ))}
-        </Select>
-        <Input label="Categoria seleccionada" value={categoriaSeleccionada?.nombre ?? ''} readOnly />
-      </div>
-
-      <div className={styles.quickCategoryWrap}>
-        {!showQuickCategory ? (
-          <Button type="button" variant="ghost" onClick={() => setShowQuickCategory(true)}>
-            Crear categoria rapida
-          </Button>
-        ) : (
-          <div className={styles.quickCategoryBox}>
-            <div className={styles.grid2}>
-              <Input
-                label="Nombre de categoria"
-                value={quickCategoriaNombre}
-                onChange={(event) => setQuickCategoriaNombre(event.target.value)}
-              />
-              <Input
-                label="Descripcion"
-                value={quickCategoriaDescripcion}
-                onChange={(event) => setQuickCategoriaDescripcion(event.target.value)}
-              />
-            </div>
-            {quickCategoriaError ? <small className={styles.errorText}>{quickCategoriaError}</small> : null}
-            <div className={styles.quickActions}>
+        <div className={styles.photoSection}>
+          <label className={styles.photoUploadLabel}>
+            <span>Foto del producto</span>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (!file) return;
+                void resizeImageToDataUrl(file, 960, 0.78).then((result) => {
+                  setValue('fotoUrl', result, { shouldDirty: true, shouldValidate: true });
+                });
+              }}
+            />
+          </label>
+          {fotoUrl ? (
+            <div className={styles.photoPreviewWrap}>
+              <img src={fotoUrl} alt="Preview del producto" className={styles.photoPreview} />
               <Button
                 type="button"
                 variant="ghost"
-                onClick={() => {
-                  setShowQuickCategory(false);
-                  setQuickCategoriaError('');
-                }}
+                onClick={() => setValue('fotoUrl', '', { shouldDirty: true, shouldValidate: true })}
               >
-                Cancelar
-              </Button>
-              <Button type="button" onClick={() => void createQuickCategory()} disabled={creatingCategory}>
-                {creatingCategory ? 'Creando...' : 'Crear y seleccionar'}
+                Quitar foto
               </Button>
             </div>
-          </div>
-        )}
-      </div>
+          ) : null}
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <div className={styles.sectionHeading}>
+          <h4>2. Categoria</h4>
+          <small className={styles.helpText}>Asigna una categoria o crea una nueva sin salir del modal.</small>
+        </div>
+
+        <div className={styles.grid2}>
+          <Select label="Categoria" {...register('categoriaId')} error={errors.categoriaId?.message}>
+            <option value="">Sin categoria</option>
+            {categorias.map((categoria) => (
+              <option key={categoria.id} value={categoria.id}>
+                {categoria.nombre}
+              </option>
+            ))}
+          </Select>
+          <Input label="Categoria seleccionada" value={categoriaSeleccionada?.nombre ?? ''} readOnly />
+        </div>
+
+        <div className={styles.quickCategoryWrap}>
+          {!showQuickCategory ? (
+            <Button type="button" variant="ghost" onClick={() => setShowQuickCategory(true)}>
+              Crear categoria rapida
+            </Button>
+          ) : (
+            <div className={styles.quickCategoryBox}>
+              <div className={styles.grid2}>
+                <Input
+                  label="Nombre de categoria"
+                  value={quickCategoriaNombre}
+                  onChange={(event) => setQuickCategoriaNombre(event.target.value)}
+                />
+                <Input
+                  label="Descripcion"
+                  value={quickCategoriaDescripcion}
+                  onChange={(event) => setQuickCategoriaDescripcion(event.target.value)}
+                />
+              </div>
+              {quickCategoriaError ? <small className={styles.errorText}>{quickCategoriaError}</small> : null}
+              <div className={styles.quickActions}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => {
+                    setShowQuickCategory(false);
+                    setQuickCategoriaError('');
+                  }}
+                >
+                  Cancelar
+                </Button>
+                <Button type="button" onClick={() => void createQuickCategory()} disabled={creatingCategory}>
+                  {creatingCategory ? 'Creando...' : 'Crear y seleccionar'}
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
 
       {origen === 'proveedor' ? (
         <div className={styles.sourceBlock}>
+          <div className={styles.sectionHeading}>
+            <h4>3. Referencia de proveedor</h4>
+            <small className={styles.helpText}>Solo aplica si el producto viene enlazado a un proveedor.</small>
+          </div>
           <div className={styles.grid2}>
             <Select label="Proveedor" {...register('proveedorId')} error={errors.proveedorId?.message}>
               <option value="">Seleccione un proveedor</option>
@@ -349,60 +366,66 @@ export default function ProductoForm({
         </div>
       ) : null}
 
-      <div className={styles.grid2}>
-        <label className={styles.toggleField}>
-          <span>Controla stock real</span>
-          <input type="checkbox" {...register('usaStock')} />
-          <small className={styles.helpText}>Desactivalo para productos preparados que se gestionan por disponibilidad.</small>
-        </label>
-        <label className={styles.toggleField}>
-          <span>Disponible para venta</span>
-          <input type="checkbox" {...register('disponible')} />
-          <small className={styles.helpText}>Si lo desactivas, el producto no aparecera para el cajero.</small>
-        </label>
-      </div>
+      <section className={styles.section}>
+        <div className={styles.sectionHeading}>
+          <h4>4. Disponibilidad</h4>
+          <small className={styles.helpText}>Aquí eliges si el producto se maneja con stock o solo como disponible.</small>
+        </div>
+        <div className={styles.grid2}>
+          <label className={styles.toggleField}>
+            <span>Controla stock real</span>
+            <input type="checkbox" {...register('usaStock')} />
+            <small className={styles.helpText}>Desactivalo para productos preparados que se gestionan por disponibilidad.</small>
+          </label>
+          <label className={styles.toggleField}>
+            <span>Disponible para venta</span>
+            <input type="checkbox" {...register('disponible')} />
+            <small className={styles.helpText}>Si lo desactivas, el producto no aparecera para el cajero.</small>
+          </label>
+        </div>
 
-      <div className={styles.grid3}>
-        <Input
-          label="Precio de venta"
-          type="number"
-          min={0}
-          step="0.01"
-          {...register('precioUnitario')}
-          error={errors.precioUnitario?.message}
-        />
-        <Input label="Unidad de medida" {...register('unidadMedida')} error={errors.unidadMedida?.message} />
-        <Input
-          label="Stock actual"
-          type="number"
-          min={0}
-          step="0.01"
-          {...register('stockActual')}
-          error={errors.stockActual?.message}
-          readOnly={!usaStock}
-        />
-      </div>
-
-      {usaStock ? (
-        <>
-          <small className={styles.helpText}>
-            El stock actual se actualiza automaticamente con compras y notas de venta cerradas.
-          </small>
-
+        <div className={styles.grid3}>
           <Input
-            label="Stock minimo"
+            label="Precio de venta"
             type="number"
             min={0}
             step="0.01"
-            {...register('stockMinimo')}
-            error={errors.stockMinimo?.message}
+            {...register('precioUnitario')}
+            error={errors.precioUnitario?.message}
           />
-        </>
-      ) : (
-        <small className={styles.helpText}>
-          Este producto no descuenta stock; solo se controla su disponibilidad desde administracion.
-        </small>
-      )}
+          <Input label="Unidad de medida" {...register('unidadMedida')} error={errors.unidadMedida?.message} />
+          <Input
+            label="Stock actual"
+            type="number"
+            min={0}
+            step="0.01"
+            {...register('stockActual')}
+            error={errors.stockActual?.message}
+            readOnly={!usaStock}
+          />
+        </div>
+
+        {usaStock ? (
+          <>
+            <small className={styles.helpText}>
+              El stock actual se actualiza automaticamente con compras y notas de venta cerradas.
+            </small>
+
+            <Input
+              label="Stock minimo"
+              type="number"
+              min={0}
+              step="0.01"
+              {...register('stockMinimo')}
+              error={errors.stockMinimo?.message}
+            />
+          </>
+        ) : (
+          <small className={styles.helpText}>
+            Este producto no descuenta stock; solo se controla su disponibilidad desde administracion.
+          </small>
+        )}
+      </section>
 
       <div className={styles.actions}>
         {onCancel ? (

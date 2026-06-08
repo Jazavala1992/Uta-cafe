@@ -61,11 +61,11 @@ export default function ProveedoresPage() {
         }}
       />
 
-      <Modal open={openCreate} title="Nuevo proveedor" onClose={() => setOpenCreate(false)}>
+      <Modal open={openCreate} title="Nuevo proveedor" onClose={() => setOpenCreate(false)} size="wide">
         <ProveedorForm onSubmit={handleCreate} onCancel={() => setOpenCreate(false)} />
       </Modal>
 
-      <Modal open={Boolean(editing)} title="Editar proveedor" onClose={() => setEditing(null)}>
+      <Modal open={Boolean(editing)} title="Editar proveedor" onClose={() => setEditing(null)} size="wide">
         <ProveedorForm
           initialValues={editing ?? undefined}
           submitLabel="Guardar cambios"

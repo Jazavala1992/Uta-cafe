@@ -70,7 +70,7 @@ export default function CompraForm() {
             proveedorId: orden.proveedorId,
             fecha: orden.fecha.slice(0, 10),
             estado: orden.estado,
-            notas: orden.notas,
+            notas: orden.notas ?? '',
             detalle: orden.detalle.length
               ? orden.detalle.map((d) => ({
                   productoId: d.productoId,
@@ -90,18 +90,19 @@ export default function CompraForm() {
   const proveedorId = useWatch({ control, name: 'proveedorId' });
   const detalleWatch = useWatch({ control, name: 'detalle' });
   const detalle = useMemo(() => detalleWatch ?? [], [detalleWatch]);
+
   const proveedorSeleccionado = useMemo(
-    () => proveedores.find((proveedor) => proveedor.id === proveedorId),
-    [proveedorId, proveedores],
+    () => proveedores.find((p) => p.id === proveedorId),
+    [proveedorId, proveedores]
   );
 
-  const productosFiltrados = useMemo(() => {
-    if (!proveedorSeleccionado) return [];
-    return proveedorSeleccionado.productos ?? [];
-  }, [proveedorSeleccionado]);
+  const productosFiltrados = useMemo(
+    () => proveedorSeleccionado?.productos ?? [],
+    [proveedorSeleccionado]
+  );
 
   useEffect(() => {
-    const idsValidos = new Set(productosFiltrados.map((producto) => producto.id));
+    const idsValidos = new Set(productosFiltrados.map((p) => p.id));
     detalle.forEach((item, index) => {
       if (item.productoId && !idsValidos.has(item.productoId)) {
         setValue(`detalle.${index}.productoId`, '');
@@ -110,37 +111,46 @@ export default function CompraForm() {
   }, [detalle, productosFiltrados, setValue]);
 
   const total = useMemo(
-    () => detalle.reduce((acc, d) => acc + (Number(d.cantidad) || 0) * (Number(d.precioUnitario) || 0), 0),
+    () =>
+      detalle.reduce(
+        (acc, d) => acc + (Number(d.cantidad) || 0) * (Number(d.precioUnitario) || 0),
+        0
+      ),
     [detalle]
   );
 
   const onSubmit = async (data: FormData) => {
-    const proveedor = proveedores.find((p) => p.id === data.proveedorId);
-    const payload = {
-      proveedorId: data.proveedorId,
-      proveedorNombre: proveedor?.razonSocial,
-      usuarioId: user?.id ?? '1',
-      estado: data.estado,
-      total,
-      fecha: new Date(data.fecha).toISOString(),
-      notas: data.notas || '',
-      detalle: data.detalle.map((d) => ({
-        id: Math.random().toString(36).slice(2, 11),
-        ordenId: id || 'nueva',
-        productoId: d.productoId,
-        productoNombre: productosFiltrados.find((p) => p.id === d.productoId)?.nombre,
-        cantidad: d.cantidad,
-        precioUnitario: d.precioUnitario,
-        subtotal: d.cantidad * d.precioUnitario,
-      })),
-      activo: true,
-    };
+    try {
+      const proveedor = proveedores.find((p) => p.id === data.proveedorId);
+      const payload = {
+        proveedorId: data.proveedorId,
+        proveedorNombre: proveedor?.razonSocial ?? proveedor?.nombre ?? 'Sin nombre',
+        usuarioId: user?.id ?? '1',
+        estado: data.estado,
+        total,
+        fecha: new Date(data.fecha).toISOString(),
+        notas: data.notas || '',
+        detalle: data.detalle.map((d) => ({
+          id: Math.random().toString(36).slice(2, 11),
+          ordenId: id || 'nueva',
+          productoId: d.productoId,
+          productoNombre:
+            productosFiltrados.find((p) => p.id === d.productoId)?.nombre ?? '',
+          cantidad: d.cantidad,
+          precioUnitario: d.precioUnitario,
+          subtotal: d.cantidad * d.precioUnitario,
+        })),
+        activo: true,
+      };
 
-    if (id) await ordenCompraService.update(id, payload);
-    else await ordenCompraService.create(payload);
+      if (id) await ordenCompraService.update(id, payload);
+      else await ordenCompraService.create(payload);
 
-    addToast('success', 'Orden de compra guardada');
-    navigate('/compras');
+      addToast('success', 'Orden de compra guardada');
+      navigate('/compras');
+    } catch (error) {
+      addToast('error', error instanceof Error ? error.message : 'Error al guardar la orden');
+    }
   };
 
   return (
@@ -148,13 +158,24 @@ export default function CompraForm() {
       <h1>{id ? 'Editar compra' : 'Nueva compra'}</h1>
       <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
         <div className={styles.topGrid}>
-          <Select label="Proveedor" {...register('proveedorId')} error={errors.proveedorId?.message}>
+          <Select
+            label="Proveedor"
+            {...register('proveedorId')}
+            error={errors.proveedorId?.message}
+          >
             <option value="">Seleccione</option>
             {proveedores.map((p) => (
-              <option key={p.id} value={p.id}>{p.razonSocial}</option>
+              <option key={p.id} value={p.id}>
+                {p.razonSocial}
+              </option>
             ))}
           </Select>
-          <Input label="Fecha" type="date" {...register('fecha')} error={errors.fecha?.message} />
+          <Input
+            label="Fecha"
+            type="date"
+            {...register('fecha')}
+            error={errors.fecha?.message}
+          />
           <Select label="Estado" {...register('estado')}>
             <option value="pendiente">pendiente</option>
             <option value="recibida" disabled>recibida</option>
@@ -173,12 +194,12 @@ export default function CompraForm() {
             <div key={field.id} className={styles.detailRow}>
               <div className={styles.fieldCol}>
                 <small className={styles.fieldLabel}>Producto</small>
-                <Select
-                  {...register(`detalle.${i}.productoId`)}
-                >
+                <Select {...register(`detalle.${i}.productoId`)}>
                   <option value="">Seleccione producto</option>
                   {productosFiltrados.map((p) => (
-                    <option key={p.id} value={p.id}>{p.nombre}</option>
+                    <option key={p.id} value={p.id}>
+                      {p.nombre}
+                    </option>
                   ))}
                 </Select>
               </div>
@@ -188,38 +209,54 @@ export default function CompraForm() {
               </div>
               <div className={styles.fieldCol}>
                 <small className={styles.fieldLabel}>Precio unitario</small>
-                <Input type="number" min={0} step="0.01" {...register(`detalle.${i}.precioUnitario`)} />
+                <Input
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  {...register(`detalle.${i}.precioUnitario`)}
+                />
               </div>
               <div className={styles.fieldCol}>
                 <small className={styles.fieldLabel}>Subtotal</small>
                 <Input
                   readOnly
                   value={formatCurrency(
-                    (Number(detalle?.[i]?.cantidad) || 0) * (Number(detalle?.[i]?.precioUnitario) || 0)
+                    (Number(detalle?.[i]?.cantidad) || 0) *
+                      (Number(detalle?.[i]?.precioUnitario) || 0)
                   )}
                 />
               </div>
-              <Button type="button" variant="danger" onClick={() => remove(i)}>Quitar</Button>
+              <Button type="button" variant="danger" onClick={() => remove(i)}>
+                Quitar
+              </Button>
             </div>
           ))}
-          <Button type="button" variant="ghost" onClick={() => append({ productoId: '', cantidad: 1, precioUnitario: 0 })}>
+
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => append({ productoId: '', cantidad: 1, precioUnitario: 0 })}
+          >
             Agregar producto
           </Button>
-          {proveedorSeleccionado && (proveedorSeleccionado.productos?.length ?? 0) > 0 ? (
-            <small>
-              Mostrando productos definidos en el catalogo del proveedor.
-            </small>
-          ) : null}
-          {proveedorSeleccionado && (proveedorSeleccionado.productos?.length ?? 0) === 0 ? (
+
+          {proveedorSeleccionado && (proveedorSeleccionado.productos?.length ?? 0) > 0 && (
+            <small>Mostrando productos definidos en el catalogo del proveedor.</small>
+          )}
+          {proveedorSeleccionado && (proveedorSeleccionado.productos?.length ?? 0) === 0 && (
             <small>
               El proveedor no tiene productos cargados. Edita el proveedor para anadir su catalogo.
             </small>
-          ) : null}
-          {errors.detalle?.message ? <small className={styles.error}>{errors.detalle?.message}</small> : null}
+          )}
+          {errors.detalle?.message && (
+            <small className={styles.error}>{errors.detalle.message}</small>
+          )}
         </div>
 
         <h3>Total: {formatCurrency(total)}</h3>
-        <Button type="submit" disabled={isSubmitting}>Guardar compra</Button>
+        <Button type="submit" disabled={isSubmitting}>
+          Guardar compra
+        </Button>
       </form>
     </section>
   );
