@@ -6,13 +6,14 @@ interface Props {
   title: string;
   onClose: () => void;
   children: ReactNode;
+  size?: 'default' | 'wide';
 }
 
-export default function Modal({ open, title, onClose, children }: Props) {
+export default function Modal({ open, title, onClose, children, size = 'default' }: Props) {
   if (!open) return null;
   return (
     <div className={styles.modalOverlay}>
-      <div className={styles.modalContent}>
+      <div className={`${styles.modalContent} ${size === 'wide' ? styles.modalContentWide : ''}`.trim()}>
         <div className={styles.modalHeader}>
           <h3>{title}</h3>
           <button onClick={onClose} className={styles.modalClose}>

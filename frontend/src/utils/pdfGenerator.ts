@@ -73,7 +73,7 @@ export const generarReporteIngresosEgresos = (data: ReporteData): void => {
   doc.setFontSize(9);
   doc.setFillColor(240, 235, 230);
   doc.rect(margen, y - 4, 170, 7, 'F');
-  doc.text('Descripcion', margen + 2, y);
+  doc.text('Proveedor', margen + 2, y);
   doc.text('Categoria', 100, y);
   doc.text('Monto (Bs.)', 150, y);
 

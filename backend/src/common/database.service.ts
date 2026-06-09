@@ -10,7 +10,12 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   private reconnecting: Promise<void> | null = null;
 
   constructor(private readonly env: EnvService) {
-    this.pool = new Pool({ connectionString: this.env.databaseUrl });
+    this.pool = new Pool({
+    connectionString: this.env.databaseUrl,
+    ssl: this.env.nodeEnv === 'production'
+    ? { rejectUnauthorized: false }
+    : false,
+});
   }
 
   async onModuleInit() {
@@ -179,6 +184,8 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         unidad_medida TEXT NOT NULL DEFAULT 'unidad',
         stock_actual NUMERIC(12,2) NOT NULL DEFAULT 0,
         stock_minimo NUMERIC(12,2) NOT NULL DEFAULT 0,
+        usa_stock BOOLEAN NOT NULL DEFAULT TRUE,
+        disponible BOOLEAN NOT NULL DEFAULT TRUE,
         activo BOOLEAN NOT NULL DEFAULT TRUE,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -199,6 +206,12 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
       ALTER TABLE productos
       ADD COLUMN IF NOT EXISTS producto_proveedor_nombre TEXT NOT NULL DEFAULT '';
+
+      ALTER TABLE productos
+      ADD COLUMN IF NOT EXISTS usa_stock BOOLEAN NOT NULL DEFAULT TRUE;
+
+      ALTER TABLE productos
+      ADD COLUMN IF NOT EXISTS disponible BOOLEAN NOT NULL DEFAULT TRUE;
 
       CREATE TABLE IF NOT EXISTS ordenes_compra (
         id TEXT PRIMARY KEY,
@@ -307,7 +320,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       WHERE entity_type = 'proveedores'
       ON CONFLICT (id) DO NOTHING;
 
-                  INSERT INTO productos (id, categoria_id, categoria_nombre, nombre, descripcion, foto_url, origen, proveedor_id, producto_proveedor_id, producto_proveedor_nombre, precio_unitario, unidad_medida, stock_actual, stock_minimo, activo, deleted_at, created_at, updated_at)
+                  INSERT INTO productos (id, categoria_id, categoria_nombre, nombre, descripcion, foto_url, origen, proveedor_id, producto_proveedor_id, producto_proveedor_nombre, precio_unitario, unidad_medida, stock_actual, stock_minimo, usa_stock, disponible, activo, deleted_at, created_at, updated_at)
       SELECT id,
              NULLIF(data->>'categoriaId', ''),
              COALESCE(data->>'categoriaNombre', ''),
@@ -322,6 +335,8 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
              COALESCE(data->>'unidadMedida', 'unidad'),
              COALESCE((data->>'stockActual')::numeric, 0),
              COALESCE((data->>'stockMinimo')::numeric, 0),
+             COALESCE((data->>'usaStock')::boolean, TRUE),
+             COALESCE((data->>'disponible')::boolean, TRUE),
              activo,
              deleted_at,
              created_at,

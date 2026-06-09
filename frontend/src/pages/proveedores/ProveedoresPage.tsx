@@ -12,8 +12,8 @@ export default function ProveedoresPage() {
   const [data, setData] = useState<Proveedor[]>([]);
   const [openCreate, setOpenCreate] = useState(false);
   const [editing, setEditing] = useState<Proveedor | null>(null);
-
   const load = async () => setData(await proveedorService.getAll(showDeleted));
+
   useEffect(() => {
     void load();
   }, [showDeleted]);
@@ -61,11 +61,11 @@ export default function ProveedoresPage() {
         }}
       />
 
-      <Modal open={openCreate} title="Nuevo proveedor" onClose={() => setOpenCreate(false)}>
+      <Modal open={openCreate} title="Nuevo proveedor" onClose={() => setOpenCreate(false)} size="wide">
         <ProveedorForm onSubmit={handleCreate} onCancel={() => setOpenCreate(false)} />
       </Modal>
 
-      <Modal open={Boolean(editing)} title="Editar proveedor" onClose={() => setEditing(null)}>
+      <Modal open={Boolean(editing)} title="Editar proveedor" onClose={() => setEditing(null)} size="wide">
         <ProveedorForm
           initialValues={editing ?? undefined}
           submitLabel="Guardar cambios"

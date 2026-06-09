@@ -53,8 +53,14 @@ export default function CategoriaForm({ onSubmit, onCancel, initialValues, submi
 
   return (
     <form onSubmit={handleSubmit(submit)} className={styles.form}>
-      <Input label="Nombre" {...register('nombre')} error={errors.nombre?.message} />
-      <Input label="Descripcion" {...register('descripcion')} error={errors.descripcion?.message} />
+      <section className={styles.section}>
+        <div className={styles.sectionHeading}>
+          <h4>Datos de la categoria</h4>
+          <small className={styles.helpText}>Define un nombre claro y una breve descripcion.</small>
+        </div>
+        <Input label="Nombre" {...register('nombre')} error={errors.nombre?.message} />
+        <Input label="Descripcion" {...register('descripcion')} error={errors.descripcion?.message} />
+      </section>
 
       <div className={styles.actions}>
         {onCancel ? (

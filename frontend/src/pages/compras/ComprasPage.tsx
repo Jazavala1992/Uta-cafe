@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Table from '@src/components/ui/Table';
 import Button from '@src/components/ui/Button';
@@ -16,14 +16,29 @@ export default function ComprasPage() {
   const [showDeleted, setShowDeleted] = useState(false);
   const [data, setData] = useState<OrdenCompra[]>([]);
 
-  const load = async () => setData(await ordenCompraService.getAll(showDeleted));
-  useEffect(() => {
-    void load();
+  const load = useCallback(async () => {
+    const result = await ordenCompraService.getAll(showDeleted);
+    const normalized = result.map((orden: any) => ({
+      ...orden,
+      proveedorNombre:
+        orden.proveedorNombre ||
+        orden.proveedor?.razonSocial ||
+        orden.proveedor?.nombre ||
+        '—',
+    }));
+    setData(normalized);
   }, [showDeleted]);
 
-  const handleFinalize = async (row: OrdenCompra) => {
+  useEffect(() => {
+    load();
+  }, [load]);
+
+const userId = user?.id;
+
+const handleFinalize = useCallback(
+  async (row: OrdenCompra) => {
     try {
-      const result = await ordenCompraService.finalize(row.id, user?.id);
+      const result = await ordenCompraService.finalize(row.id, userId);
       if (result.alreadyFinalized) {
         addToast('warning', 'La orden ya estaba finalizada');
       } else {
@@ -33,7 +48,25 @@ export default function ComprasPage() {
     } catch (error) {
       addToast('error', error instanceof Error ? error.message : 'No se pudo finalizar la compra');
     }
-  };
+  },
+  [load, userId, addToast]
+);
+
+  const handleDelete = useCallback(
+    async (row: OrdenCompra) => {
+      await ordenCompraService.delete(row.id);
+      await load();
+    },
+    [load]
+  );
+
+  const handleRestore = useCallback(
+    async (row: OrdenCompra) => {
+      await ordenCompraService.restore(row.id);
+      await load();
+    },
+    [load]
+  );
 
   return (
     <section className={styles.page}>
@@ -62,14 +95,8 @@ export default function ComprasPage() {
           ) : null
         }
         onEdit={(row) => navigate(`/compras/${row.id}`)}
-        onDelete={async (row) => {
-          await ordenCompraService.delete(row.id);
-          await load();
-        }}
-        onRestore={async (row) => {
-          await ordenCompraService.restore(row.id);
-          await load();
-        }}
+        onDelete={handleDelete}
+        onRestore={handleRestore}
       />
     </section>
   );

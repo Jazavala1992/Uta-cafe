@@ -3,7 +3,7 @@ import type { MovimientoInventario } from '@src/types';
 
 export const inventarioService = {
   // GET /api/inventario/movimientos
-  getAll: async (_incluirEliminados = false): Promise<MovimientoInventario[]> => {
+  getAll: async (): Promise<MovimientoInventario[]> => {
     const { data } = await api.get<MovimientoInventario[]>('/inventario/movimientos');
     return data;
   },

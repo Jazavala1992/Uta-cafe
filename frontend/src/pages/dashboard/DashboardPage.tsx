@@ -4,7 +4,8 @@ import { formatCurrency } from '@src/utils/formatters';
 import { ventaService } from '@src/services/ventaService';
 import { gastoService } from '@src/services/gastoService';
 import { productoService } from '@src/services/productoService';
-import type { Gasto, NotaVenta, Producto } from '@src/types';
+import { categoriaService } from '@src/services/categoriaService';
+import type { Categoria, Gasto, NotaVenta, Producto } from '@src/types';
 import BarChartIngresos from '@src/components/charts/BarChartIngresos';
 import LineChartTendencia from '@src/components/charts/LineChartTendencia';
 import PieChartProductos from '@src/components/charts/PieChartProductos';
@@ -12,21 +13,49 @@ import Alert from '@src/components/ui/Alert';
 import AssistantPanel from '@src/components/ai/AssistantPanel';
 import styles from './DashboardPage.module.css';
 
+const shortDateFormatter = new Intl.DateTimeFormat('es-BO', {
+  day: '2-digit',
+  month: '2-digit',
+});
+
+function getDayKey(value: string | Date) {
+  const date = typeof value === 'string' ? new Date(value) : value;
+  return [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
+}
+
+function addDays(baseDate: Date, offset: number) {
+  const nextDate = new Date(baseDate);
+  nextDate.setDate(nextDate.getDate() + offset);
+  return nextDate;
+}
+
 export default function DashboardPage() {
   const [ventas, setVentas] = useState<NotaVenta[]>([]);
   const [gastos, setGastos] = useState<Gasto[]>([]);
   const [productos, setProductos] = useState<Producto[]>([]);
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
 
   useEffect(() => {
-    const load = async () => {
-      setVentas(await ventaService.getAll());
-      setGastos(await gastoService.getAll());
-      setProductos(await productoService.getAll());
+    let mounted = true;
+    (async () => {
+      const [ventasData, gastosData, productosData, categoriasData] = await Promise.all([
+        ventaService.getAll(),
+        gastoService.getAll(),
+        productoService.getAll(),
+        categoriaService.getAll(),
+      ]);
+      if (!mounted) return;
+      setVentas(ventasData);
+      setGastos(gastosData);
+      setProductos(productosData);
+      setCategorias(categoriasData);
+    })();
+    return () => {
+      mounted = false;
     };
-    void load();
   }, []);
 
-  const now = new Date();
+  const now = useMemo(() => new Date(), []);
   const today = now.toLocaleDateString('es-BO');
 
   const ventasDia = ventas.filter((v) => new Date(v.fecha).toLocaleDateString('es-BO') === today).reduce((acc, v) => acc + v.total, 0);
@@ -34,48 +63,72 @@ export default function DashboardPage() {
   const ventasMes = ventas.filter((v) => new Date(v.fecha).getMonth() === now.getMonth()).reduce((acc, v) => acc + v.total, 0);
   const gastosMes = gastos.filter((g) => new Date(g.fecha).getMonth() === now.getMonth()).reduce((acc, g) => acc + g.monto, 0);
 
-  const stockBajo = productos.filter((p) => p.stockActual <= p.stockMinimo);
+  const stockBajo = productos.filter((p) => p.usaStock && p.disponible && p.stockActual <= p.stockMinimo);
+  const categoriaNombrePorId = useMemo(
+    () => new Map(categorias.map((categoria) => [categoria.id, categoria.nombre.trim()])),
+    [categorias]
+  );
+
+  const ventasPorDia = useMemo(() => {
+    const totals = new Map<string, number>();
+    for (const venta of ventas) {
+      const key = getDayKey(venta.fecha);
+      totals.set(key, (totals.get(key) ?? 0) + venta.total);
+    }
+    return totals;
+  }, [ventas]);
+
+  const gastosPorDia = useMemo(() => {
+    const totals = new Map<string, number>();
+    for (const gasto of gastos) {
+      const key = getDayKey(gasto.fecha);
+      totals.set(key, (totals.get(key) ?? 0) + gasto.monto);
+    }
+    return totals;
+  }, [gastos]);
 
   const barData = useMemo(
     () =>
       Array.from({ length: 7 }).map((_, i) => {
-        const d = new Date();
-        d.setDate(d.getDate() - (6 - i));
-        const key = d.toLocaleDateString('es-BO');
+        const d = addDays(now, i - 6);
+        const key = getDayKey(d);
         return {
-          name: d.toLocaleDateString('es-BO', { day: '2-digit', month: '2-digit' }),
-          total: ventas
-            .filter((v) => new Date(v.fecha).toLocaleDateString('es-BO') === key)
-            .reduce((a, v) => a + v.total, 0),
+          name: shortDateFormatter.format(d),
+          total: ventasPorDia.get(key) ?? 0,
         };
       }),
-    [ventas]
+    [now, ventasPorDia]
   );
 
   const lineData = useMemo(
     () =>
       Array.from({ length: 30 }).map((_, i) => {
-        const d = new Date();
-        d.setDate(d.getDate() - (29 - i));
-        const key = d.toLocaleDateString('es-BO');
+        const d = addDays(now, i - 29);
+        const key = getDayKey(d);
         return {
-          name: d.toLocaleDateString('es-BO', { day: '2-digit', month: '2-digit' }),
-          ingresos: ventas
-            .filter((v) => new Date(v.fecha).toLocaleDateString('es-BO') === key)
-            .reduce((a, v) => a + v.total, 0),
-          egresos: gastos
-            .filter((g) => new Date(g.fecha).toLocaleDateString('es-BO') === key)
-            .reduce((a, g) => a + g.monto, 0),
+          name: shortDateFormatter.format(d),
+          ingresos: ventasPorDia.get(key) ?? 0,
+          egresos: gastosPorDia.get(key) ?? 0,
         };
       }),
-    [ventas, gastos]
+    [now, ventasPorDia, gastosPorDia]
   );
 
-  const pieData = [
-    { name: 'Bebidas calientes', value: Math.max(ventas.length * 2, 1) },
-    { name: 'Reposteria', value: Math.max(ventas.length, 1) },
-    { name: 'Bebidas frias', value: Math.max(ventas.length - 1, 1) },
-  ];
+  const pieData = useMemo(() => {
+    const totals = new Map<string, number>();
+
+    for (const categoria of categorias) {
+      totals.set(categoria.nombre.trim() || 'Sin nombre', 0);
+    }
+
+    for (const producto of productos) {
+      const categoria = categoriaNombrePorId.get(producto.categoriaId) || producto.categoriaNombre?.trim() || 'Sin categoría';
+      totals.set(categoria, (totals.get(categoria) ?? 0) + 1);
+    }
+
+    const ordered = Array.from(totals.entries()).sort((left, right) => right[1] - left[1]);
+    return ordered.map(([name, value]) => ({ name, value }));
+  }, [categorias, categoriaNombrePorId, productos]);
 
   return (
     <section className={styles.page}>

@@ -23,8 +23,17 @@ export default function UsuariosPage() {
   const [data, setData] = useState<UsuarioRow[]>([]);
 
   const load = async () => setData(await authService.getUsuarios(showDeleted));
+
   useEffect(() => {
-    void load();
+    let mounted = true;
+    (async () => {
+      const result = await authService.getUsuarios(showDeleted);
+      if (!mounted) return;
+      setData(result);
+    })();
+    return () => {
+      mounted = false;
+    };
   }, [showDeleted]);
 
   return (

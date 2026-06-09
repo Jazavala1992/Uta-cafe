@@ -11,14 +11,20 @@ export default function AccesoLogPage() {
   const [logs, setLogs] = useState<AccesoLog[]>([]);
 
   useEffect(() => {
-    const load = async () => {
+    let mounted = true;
+    (async () => {
       try {
-        setLogs(await authService.getLogs());
+        const result = await authService.getLogs();
+        if (!mounted) return;
+        setLogs(result);
       } catch {
+        if (!mounted) return;
         setLogs([]);
       }
+    })();
+    return () => {
+      mounted = false;
     };
-    void load();
   }, []);
 
   const data = logs.filter(

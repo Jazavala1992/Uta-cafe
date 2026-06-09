@@ -42,6 +42,8 @@ interface ProductoStockRow {
   id: string;
   nombre: string;
   stock_actual: string;
+  usa_stock?: boolean;
+  disponible?: boolean;
 }
 
 interface VentaEstadoRow {
@@ -219,7 +221,7 @@ export class DataService {
       table: 'productos',
       hasSoftDelete: true,
       listColumns:
-        'id, categoria_id, categoria_nombre, nombre, descripcion, foto_url, origen, proveedor_id, producto_proveedor_id, producto_proveedor_nombre, precio_unitario, unidad_medida, stock_actual, stock_minimo, activo, deleted_at',
+        'id, categoria_id, categoria_nombre, nombre, descripcion, foto_url, origen, proveedor_id, producto_proveedor_id, producto_proveedor_nombre, precio_unitario, unidad_medida, stock_actual, stock_minimo, usa_stock, disponible, activo, deleted_at',
       mapRow: (row) => ({
         id: String(row.id),
         categoriaId: row.categoria_id ? String(row.categoria_id) : '',
@@ -235,6 +237,8 @@ export class DataService {
         unidadMedida: String(row.unidad_medida ?? 'unidad'),
         stockActual: Number(row.stock_actual ?? 0),
         stockMinimo: Number(row.stock_minimo ?? 0),
+        usaStock: Boolean(row.usa_stock ?? true),
+        disponible: Boolean(row.disponible ?? true),
         activo: Boolean(row.activo),
         deletedAt: row.deleted_at ? String(row.deleted_at) : undefined,
       }),
@@ -243,10 +247,10 @@ export class DataService {
           INSERT INTO productos (
             id, categoria_id, categoria_nombre, nombre, descripcion, foto_url, origen,
             proveedor_id, producto_proveedor_id, producto_proveedor_nombre,
-            precio_unitario, unidad_medida, stock_actual, stock_minimo,
+            precio_unitario, unidad_medida, stock_actual, stock_minimo, usa_stock, disponible,
             activo, deleted_at, created_at, updated_at
           )
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, TRUE, NULL, NOW(), NOW())
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, TRUE, NULL, NOW(), NOW())
         `,
         params: [
           id,
@@ -263,6 +267,8 @@ export class DataService {
           String(payload.unidadMedida ?? 'unidad'),
           Number(payload.stockActual ?? 0),
           Number(payload.stockMinimo ?? 0),
+          payload.usaStock === undefined ? true : Boolean(payload.usaStock),
+          payload.disponible === undefined ? true : Boolean(payload.disponible),
         ],
       }),
       buildUpdate: (id, payload) => {
@@ -320,6 +326,14 @@ export class DataService {
         if (payload.stockMinimo !== undefined) {
           fields.push(`stock_minimo = $${fields.length + 1}`);
           values.push(Number(payload.stockMinimo));
+        }
+        if (payload.usaStock !== undefined) {
+          fields.push(`usa_stock = $${fields.length + 1}`);
+          values.push(Boolean(payload.usaStock));
+        }
+        if (payload.disponible !== undefined) {
+          fields.push(`disponible = $${fields.length + 1}`);
+          values.push(Boolean(payload.disponible));
         }
         if (payload.activo !== undefined) {
           fields.push(`activo = $${fields.length + 1}`);
@@ -676,7 +690,7 @@ export class DataService {
   private async findProductoForInventory(productoRefId: string) {
     const { rows } = await this.db.query<ProductoStockRow>(
       `
-      SELECT id, nombre, stock_actual::text
+      SELECT id, nombre, stock_actual::text, usa_stock, disponible
       FROM productos
       WHERE deleted_at IS NULL
         AND (id = $1 OR producto_proveedor_id = $1)
@@ -685,7 +699,9 @@ export class DataService {
       `,
       [productoRefId],
     );
-    return rows[0] ?? null;
+    const producto = rows[0] ?? null;
+    if (!producto || !Boolean(producto.usa_stock ?? true)) return null;
+    return producto;
   }
 
   private async applyInventoryMovement(args: {

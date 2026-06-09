@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import Badge from './Badge';
 import Button from './Button';
+import { FiEdit3, FiRotateCcw, FiTrash2 } from 'react-icons/fi';
 import styles from './ui.module.css';
 
 interface TableProps<T> {
@@ -15,6 +16,7 @@ interface TableProps<T> {
   onDelete?: (row: T) => void;
   onRestore?: (row: T) => void;
   renderExtraActions?: (row: T) => React.ReactNode;
+  compactActions?: boolean;
   loading?: boolean;
   pageSize?: number;
   searchable?: boolean;
@@ -31,6 +33,7 @@ export default function Table<T extends object>({
   onDelete,
   onRestore,
   renderExtraActions,
+  compactActions,
   loading,
   pageSize = 10,
   searchable,
@@ -111,29 +114,76 @@ export default function Table<T extends object>({
                         </td>
                       ))}
                       {hasActions ? (
-                        <td className={styles.tableCell}>
-                          <div className={styles.actionsCell}>
-                            {eliminado ? <Badge color="danger">Eliminado</Badge> : null}
-                            {eliminado ? (
-                              <Button variant="secondary" onClick={() => onRestore?.(row)}>
-                                Restaurar
-                              </Button>
-                            ) : (
-                              <>
-                                {renderExtraActions ? renderExtraActions(row) : null}
-                                {onEdit ? (
-                                  <Button variant="ghost" onClick={() => onEdit(row)}>
-                                    Editar
+                        <td className={`${styles.tableCell} ${compactActions ? styles.tableCellCompactActions : ''}`}>
+                          {compactActions ? (
+                            <div className={styles.actionsCellCompact}>
+                              {eliminado ? <Badge color="danger">Eliminado</Badge> : null}
+                              {!eliminado && renderExtraActions ? (
+                                <div className={styles.actionsExtraSlot}>{renderExtraActions(row)}</div>
+                              ) : null}
+                              <div className={styles.actionsButtonsCompact}>
+                                {eliminado ? (
+                                  <Button
+                                    variant="ghost"
+                                    onClick={() => onRestore?.(row)}
+                                    className={`${styles.actionButtonCompact} ${styles.actionButtonRestoreCompact}`}
+                                    aria-label="Restaurar"
+                                    title="Restaurar"
+                                  >
+                                    <FiRotateCcw size={16} />
                                   </Button>
-                                ) : null}
-                                {onDelete ? (
-                                  <Button variant="danger" onClick={() => onDelete(row)}>
-                                    Eliminar
-                                  </Button>
-                                ) : null}
-                              </>
-                            )}
-                          </div>
+                                ) : (
+                                  <>
+                                    {onEdit ? (
+                                      <Button
+                                        variant="ghost"
+                                        onClick={() => onEdit(row)}
+                                        className={`${styles.actionButtonCompact} ${styles.actionButtonEditCompact}`}
+                                        aria-label="Editar"
+                                        title="Editar"
+                                      >
+                                        <FiEdit3 size={16} />
+                                      </Button>
+                                    ) : null}
+                                    {onDelete ? (
+                                      <Button
+                                        variant="ghost"
+                                        onClick={() => onDelete(row)}
+                                        className={`${styles.actionButtonCompact} ${styles.actionButtonDeleteCompact}`}
+                                        aria-label="Eliminar"
+                                        title="Eliminar"
+                                      >
+                                        <FiTrash2 size={16} />
+                                      </Button>
+                                    ) : null}
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className={styles.actionsCell}>
+                              {eliminado ? <Badge color="danger">Eliminado</Badge> : null}
+                              {eliminado ? (
+                                <Button variant="secondary" onClick={() => onRestore?.(row)}>
+                                  Restaurar
+                                </Button>
+                              ) : (
+                                <>
+                                  {renderExtraActions ? renderExtraActions(row) : null}
+                                  {onEdit ? (
+                                    <Button variant="ghost" onClick={() => onEdit(row)}>
+                                      Editar
+                                    </Button>
+                                  ) : null}
+                                  {onDelete ? (
+                                    <Button variant="danger" onClick={() => onDelete(row)}>
+                                      Eliminar
+                                    </Button>
+                                  ) : null}
+                                </>
+                              )}
+                            </div>
+                          )}
                         </td>
                       ) : null}
                     </tr>

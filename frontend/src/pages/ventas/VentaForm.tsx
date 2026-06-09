@@ -70,6 +70,16 @@ export default function VentaForm() {
   const detalle = useMemo(() => detalleWatch ?? [], [detalleWatch]);
   const descuento = useWatch({ control, name: 'descuento' }) ?? 0;
 
+  const productosVendibles = useMemo(
+    () =>
+      productos.filter((producto) => {
+        if (!producto.disponible) return false;
+        if (!producto.usaStock) return true;
+        return Number(producto.stockActual ?? 0) > 0;
+      }),
+    [productos],
+  );
+
   useEffect(() => {
     const load = async () => {
       const [productosData, categoriasData] = await Promise.all([
@@ -104,9 +114,10 @@ export default function VentaForm() {
   }, [id, reset]);
 
   const productosFiltrados = useMemo(() => {
-    if (categoriaFiltro === 'todas') return productos;
-    return productos.filter((producto) => producto.categoriaId === categoriaFiltro);
-  }, [categoriaFiltro, productos]);
+    const base = productosVendibles;
+    if (categoriaFiltro === 'todas') return base;
+    return base.filter((producto) => producto.categoriaId === categoriaFiltro);
+  }, [categoriaFiltro, productosVendibles]);
 
   const subtotal = useMemo(
     () => detalle.reduce((acc, d) => acc + (Number(d.cantidad) || 0) * (Number(d.precioUnitario) || 0), 0),
@@ -226,7 +237,7 @@ export default function VentaForm() {
           >
             Todas
           </Button>
-          {categorias.map((categoria) => (
+          {categorias.filter((categoria) => productosVendibles.some((producto) => producto.categoriaId === categoria.id)).map((categoria) => (
             <Button
               key={categoria.id}
               type="button"
@@ -241,7 +252,7 @@ export default function VentaForm() {
         <div className={styles.cardsGrid}>
           {productosFiltrados.map((producto) => {
             const stock = Number(producto.stockActual ?? 0);
-            const sinStock = stock <= 0;
+            const sinStock = producto.usaStock ? stock <= 0 : !producto.disponible;
             return (
               <button
                 type="button"
@@ -249,7 +260,7 @@ export default function VentaForm() {
                 className={`${styles.productCard} ${sinStock ? styles.cardDisabled : ''}`}
                 onClick={() => addProductoDesdeCard(producto)}
                 disabled={sinStock}
-                title={sinStock ? 'Sin stock' : 'Agregar a la orden'}
+                title={sinStock ? 'No disponible' : 'Agregar a la orden'}
               >
                 {producto.fotoUrl ? (
                   <img src={producto.fotoUrl} alt={producto.nombre} className={styles.productImage} />
@@ -260,7 +271,11 @@ export default function VentaForm() {
                   <strong>{producto.nombre}</strong>
                   <small>{producto.categoriaNombre || 'Sin categoria'}</small>
                   <small>{formatCurrency(producto.precioUnitario)}</small>
-                  <small className={sinStock ? styles.stockDanger : styles.stockInfo}>Stock: {stock}</small>
+                  {producto.usaStock ? (
+                    <small className={sinStock ? styles.stockDanger : styles.stockInfo}>Stock: {stock}</small>
+                  ) : (
+                    <small className={styles.stockInfo}>Disponible</small>
+                  )}
                 </div>
               </button>
             );

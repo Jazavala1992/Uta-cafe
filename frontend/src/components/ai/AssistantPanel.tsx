@@ -13,15 +13,20 @@ export default function AssistantPanel() {
   const [tokensUsed, setTokensUsed] = useState<number | null>(null);
 
   useEffect(() => {
-    const load = async () => {
+    let mounted = true;
+    (async () => {
       try {
         const s = await aiService.getStatus();
+        if (!mounted) return;
         setStatus({ provider: s.provider, model: s.model });
       } catch {
+        if (!mounted) return;
         setStatus(null);
       }
+    })();
+    return () => {
+      mounted = false;
     };
-    void load();
   }, []);
 
   const ask = async () => {

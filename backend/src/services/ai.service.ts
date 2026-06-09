@@ -22,20 +22,27 @@ export class AiService {
   ) {}
 
   async chat(payload: ChatDto): Promise<{ reply: string; provider: string; model: string; tokens?: number }> {
-    if (this.env.aiProvider !== 'ollama') {
-      throw new BadRequestException(`AI_PROVIDER no soportado: ${this.env.aiProvider}`);
+    try {
+      if (this.env.aiProvider !== 'ollama') {
+        throw new BadRequestException(`AI_PROVIDER no soportado: ${this.env.aiProvider}`);
+      }
+
+      const inventoryContext = await this.buildInventoryContext(payload.prompt);
+      const prompt = this.buildPrompt(payload, inventoryContext);
+      const { reply, tokens } = await this.chatWithOllama(prompt, payload);
+
+      return {
+        reply,
+        provider: this.env.aiProvider,
+        model: this.env.ollamaModel,
+        tokens: tokens ?? null,
+      };
+    } catch (error) {
+      // Log full error for debugging during development
+      // eslint-disable-next-line no-console
+      console.error('AiService.chat error:', error instanceof Error ? error.stack || error.message : error);
+      throw error;
     }
-
-    const inventoryContext = await this.buildInventoryContext(payload.prompt);
-    const prompt = this.buildPrompt(payload, inventoryContext);
-    const { reply, tokens } = await this.chatWithOllama(prompt, payload);
-
-    return {
-      reply,
-      provider: this.env.aiProvider,
-      model: this.env.ollamaModel,
-      tokens: tokens ?? null,
-    };
   }
 
   getStatus() {
@@ -217,17 +224,20 @@ export class AiService {
     }
   }
 
-  private isSalesQuestion(prompt: string) {
+  private isSalesQuestion(prompt?: string) {
+    if (!prompt) return false;
     const normalized = this.normalizeText(prompt);
     return /(venta|ventas|ventas del|ingresos|total de ventas|ventas del dia)/.test(normalized);
   }
 
-  private isPurchasesQuestion(prompt: string) {
+  private isPurchasesQuestion(prompt?: string) {
+    if (!prompt) return false;
     const normalized = this.normalizeText(prompt);
     return /(compra|compras|ordenes de compra|proveedor|orden de compra)/.test(normalized);
   }
 
-  private isInventoryQuestion(prompt: string) {
+  private isInventoryQuestion(prompt?: string) {
+    if (!prompt) return false;
     const normalized = this.normalizeText(prompt);
     return /(stock|inventario|existenc|producto|productos|disponible|disponibles|agotad|faltant|cantidad|bodega)/.test(normalized);
   }
@@ -246,8 +256,9 @@ export class AiService {
     return stockActual <= 0 || stockActual <= stockMinimo;
   }
 
-  private normalizeText(value: string) {
-    return value
+  private normalizeText(value?: string) {
+    const v = String(value ?? '');
+    return v
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .toLowerCase();

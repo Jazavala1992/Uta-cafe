@@ -36,6 +36,7 @@ export default function GastosPage() {
   });
 
   const load = async () => setData(await gastoService.getAll(showDeleted));
+
   useEffect(() => {
     void load();
   }, [showDeleted]);

@@ -9,45 +9,48 @@ interface InventarioRow {
   id: string;
   productoNombre: string;
   categoriaNombre: string;
-  stockActual: number;
-  stockMinimo: number;
-  estadoStock: 'sin-stock' | 'bajo' | 'ok';
+  estado: 'sin-stock' | 'bajo' | 'ok' | 'disponible' | 'no-disponible';
+  detalle: string;
 }
 
 export default function InventarioPage() {
   const [data, setData] = useState<InventarioRow[]>([]);
 
   useEffect(() => {
-    const load = async () => {
+    let mounted = true;
+    (async () => {
       const productos = await productoService.getAll(false);
+      if (!mounted) return;
       setData(
         productos
           .filter((producto) => producto.activo)
           .map((producto) => toInventarioRow(producto))
           .sort((a, b) => a.productoNombre.localeCompare(b.productoNombre)),
       );
+    })();
+    return () => {
+      mounted = false;
     };
-    void load();
   }, []);
 
   return (
     <section className={styles.page}>
       <h1>Inventario actual</h1>
       <small className={styles.helpText}>
-        Cada producto se muestra en una sola fila con su stock actualizado.
+        Los productos preparados se muestran como disponibles o no disponibles; los de stock muestran su cantidad.
       </small>
       <Table<InventarioRow>
         columns={[
           { key: 'productoNombre', header: 'Producto' },
           { key: 'categoriaNombre', header: 'Categoria' },
-          { key: 'stockActual', header: 'Stock actual' },
-          { key: 'stockMinimo', header: 'Stock minimo' },
           {
-            key: 'estadoStock',
+            key: 'detalle',
             header: 'Estado',
             render: (row) => {
-              if (row.estadoStock === 'sin-stock') return <Badge color="danger">Sin stock</Badge>;
-              if (row.estadoStock === 'bajo') return <Badge color="warning">Stock bajo</Badge>;
+              if (row.estado === 'no-disponible') return <Badge color="danger">No disponible</Badge>;
+              if (row.estado === 'disponible') return <Badge color="success">Disponible</Badge>;
+              if (row.estado === 'sin-stock') return <Badge color="danger">No disponible</Badge>;
+              if (row.estado === 'bajo') return <Badge color="warning">Stock bajo</Badge>;
               return <Badge color="success">OK</Badge>;
             },
           },
@@ -68,8 +71,7 @@ function toInventarioRow(producto: Producto): InventarioRow {
     id: producto.id,
     productoNombre: producto.nombre,
     categoriaNombre: producto.categoriaNombre || 'Sin categoria',
-    stockActual,
-    stockMinimo,
-    estadoStock: stockActual <= 0 ? 'sin-stock' : stockActual <= stockMinimo ? 'bajo' : 'ok',
+    estado: !producto.disponible ? 'no-disponible' : !producto.usaStock ? 'disponible' : stockActual <= 0 ? 'sin-stock' : stockActual <= stockMinimo ? 'bajo' : 'ok',
+    detalle: !producto.usaStock ? 'Disponible manualmente' : `Stock: ${stockActual} / minimo ${stockMinimo}`,
   };
 }

@@ -14,6 +14,7 @@ import styles from './ProductosPage.module.css';
 export default function ProductosPage() {
   const [showDeleted, setShowDeleted] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
   const [data, setData] = useState<Producto[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [proveedores, setProveedores] = useState<Proveedor[]>([]);
@@ -53,9 +54,7 @@ export default function ProductosPage() {
 
   const handleUpdate = async (values: Omit<Producto, 'id'>) => {
     if (!editing) return;
-    const payload: Partial<Producto> = { ...values };
-    delete payload.stockActual;
-    await productoService.update(editing.id, payload);
+    await productoService.update(editing.id, values);
     setEditing(null);
     await load();
   };
@@ -69,6 +68,21 @@ export default function ProductosPage() {
     const categoriasData = await categoriaService.getAll(false);
     setCategorias(categoriasData);
     return categoria;
+  };
+
+  const toggleProductoDisponibilidad = async (row: Producto) => {
+    if (row.usaStock || togglingId === row.id) return;
+    setTogglingId(row.id);
+    try {
+      const disponible = !row.disponible;
+      await productoService.update(row.id, {
+        disponible,
+        stockActual: disponible ? 1 : 0,
+      });
+      await load();
+    } finally {
+      setTogglingId(null);
+    }
   };
 
   return (
@@ -85,6 +99,13 @@ export default function ProductosPage() {
         columns={[
           { key: 'nombre', header: 'Nombre' },
           { key: 'categoriaNombre', header: 'Categoria' },
+          {
+            key: 'estado',
+            header: 'Estado',
+            render: (row) => {
+              return row.disponible ? <Badge color="success">Disponible</Badge> : <Badge color="danger">No disponible</Badge>;
+            },
+          },
           {
             key: 'origen',
             header: 'Origen',
@@ -110,6 +131,14 @@ export default function ProductosPage() {
             key: 'stockActual',
             header: 'Stock',
             render: (row) => {
+              if (!row.usaStock) {
+                return row.disponible ? (
+                  <Badge color="success">Disponible</Badge>
+                ) : (
+                  <Badge color="danger">No disponible</Badge>
+                );
+              }
+
               const stockActual = Number(row.stockActual ?? 0);
               const stockMinimo = Number(row.stockMinimo ?? 0);
 
@@ -144,6 +173,7 @@ export default function ProductosPage() {
         showDeleted={showDeleted}
         onToggleShowDeleted={() => setShowDeleted((v) => !v)}
         isAdmin
+        compactActions
         onEdit={(row) => setEditing(row)}
         onDelete={async (row) => {
           await productoService.delete(row.id);
@@ -153,9 +183,25 @@ export default function ProductosPage() {
           await productoService.restore(row.id);
           await load();
         }}
+        renderExtraActions={(row) =>
+          row.usaStock ? null : (
+            <label className={styles.availabilitySwitch} title={row.disponible ? 'Marcar como no disponible' : 'Marcar como disponible'}>
+              <input
+                type="checkbox"
+                checked={row.disponible}
+                disabled={togglingId === row.id}
+                onChange={() => void toggleProductoDisponibilidad(row)}
+              />
+              <span className={styles.availabilityTrack}>
+                <span className={styles.availabilityThumb} />
+              </span>
+              <span className={styles.availabilityLabel}>{row.disponible ? 'Disponible' : 'No disponible'}</span>
+            </label>
+          )
+        }
       />
 
-      <Modal open={openCreate} title="Nuevo producto" onClose={() => setOpenCreate(false)}>
+      <Modal open={openCreate} title="Nuevo producto" onClose={() => setOpenCreate(false)} size="wide">
         <ProductoForm
           categorias={categorias}
           proveedores={proveedores}
@@ -165,7 +211,7 @@ export default function ProductosPage() {
         />
       </Modal>
 
-      <Modal open={Boolean(editing)} title="Editar producto" onClose={() => setEditing(null)}>
+      <Modal open={Boolean(editing)} title="Editar producto" onClose={() => setEditing(null)} size="wide">
         <ProductoForm
           categorias={categorias}
           proveedores={proveedores}
