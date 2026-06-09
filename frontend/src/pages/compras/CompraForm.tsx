@@ -124,7 +124,7 @@ export default function CompraForm() {
       const proveedor = proveedores.find((p) => p.id === data.proveedorId);
       const payload = {
         proveedorId: data.proveedorId,
-        proveedorNombre: proveedor?.razonSocial ?? proveedor?.nombre ?? 'Sin nombre',
+        proveedorNombre: proveedor?.razonSocial ?? 'Sin nombre',
         usuarioId: user?.id ?? '1',
         estado: data.estado,
         total,
