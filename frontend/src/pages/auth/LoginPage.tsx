@@ -11,7 +11,7 @@ import Alert from '@src/components/ui/Alert';
 import logoUtaCafe from '@src/assets/UTA.png';
 import styles from './LoginPage.module.css';
 
-const TURNSTILE_SITE_KEY = '0x4AAAAAADg2PaMwZOdp6Pm0';
+const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || '0x4AAAAAADg2PaMwZOdp6Pm0';
 
 const schema = z.object({
   email: z.string().email('Email invalido'),
