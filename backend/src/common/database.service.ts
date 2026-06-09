@@ -1,5 +1,6 @@
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit, ServiceUnavailableException } from '@nestjs/common';
 import { Pool, QueryResultRow } from 'pg';
+import * as bcrypt from 'bcrypt';
 import { EnvService } from '../config/env.service';
 
 @Injectable()
@@ -11,11 +12,11 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
   constructor(private readonly env: EnvService) {
     this.pool = new Pool({
-    connectionString: this.env.databaseUrl,
-    ssl: this.env.nodeEnv === 'production'
-    ? { rejectUnauthorized: false }
-    : false,
-});
+      connectionString: this.env.databaseUrl,
+      ssl: this.env.nodeEnv === 'production'
+        ? { rejectUnauthorized: false }
+        : false,
+    });
   }
 
   async onModuleInit() {
@@ -303,15 +304,15 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       WHERE entity_type = 'categorias'
       ON CONFLICT (id) DO NOTHING;
 
-                  INSERT INTO proveedores (id, razon_social, contacto, telefono, email, direccion, productos_ids, productos_catalogo, activo, deleted_at, created_at, updated_at)
+      INSERT INTO proveedores (id, razon_social, contacto, telefono, email, direccion, productos_ids, productos_catalogo, activo, deleted_at, created_at, updated_at)
       SELECT id,
              COALESCE(data->>'razonSocial', ''),
              COALESCE(data->>'contacto', ''),
              COALESCE(data->>'telefono', ''),
              COALESCE(data->>'email', ''),
              COALESCE(data->>'direccion', ''),
-              COALESCE(data->'productoIds', '[]'::jsonb),
-                    COALESCE(data->'productos', '[]'::jsonb),
+             COALESCE(data->'productoIds', '[]'::jsonb),
+             COALESCE(data->'productos', '[]'::jsonb),
              activo,
              deleted_at,
              created_at,
@@ -320,17 +321,17 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       WHERE entity_type = 'proveedores'
       ON CONFLICT (id) DO NOTHING;
 
-                  INSERT INTO productos (id, categoria_id, categoria_nombre, nombre, descripcion, foto_url, origen, proveedor_id, producto_proveedor_id, producto_proveedor_nombre, precio_unitario, unidad_medida, stock_actual, stock_minimo, usa_stock, disponible, activo, deleted_at, created_at, updated_at)
+      INSERT INTO productos (id, categoria_id, categoria_nombre, nombre, descripcion, foto_url, origen, proveedor_id, producto_proveedor_id, producto_proveedor_nombre, precio_unitario, unidad_medida, stock_actual, stock_minimo, usa_stock, disponible, activo, deleted_at, created_at, updated_at)
       SELECT id,
              NULLIF(data->>'categoriaId', ''),
              COALESCE(data->>'categoriaNombre', ''),
              COALESCE(data->>'nombre', ''),
              COALESCE(data->>'descripcion', ''),
-                    COALESCE(data->>'fotoUrl', ''),
-              COALESCE(NULLIF(data->>'origen', ''), 'interno'),
-              NULLIF(data->>'proveedorId', ''),
-              NULLIF(data->>'productoProveedorId', ''),
-              COALESCE(data->>'productoProveedorNombre', ''),
+             COALESCE(data->>'fotoUrl', ''),
+             COALESCE(NULLIF(data->>'origen', ''), 'interno'),
+             NULLIF(data->>'proveedorId', ''),
+             NULLIF(data->>'productoProveedorId', ''),
+             COALESCE(data->>'productoProveedorNombre', ''),
              COALESCE((data->>'precioUnitario')::numeric, 0),
              COALESCE(data->>'unidadMedida', 'unidad'),
              COALESCE((data->>'stockActual')::numeric, 0),
@@ -420,8 +421,13 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async seedDefaultUsers() {
-    const { rows } = await this.pool.query<{ count: string }>('SELECT COUNT(*)::text as count FROM users');
+    const { rows } = await this.pool.query<{ count: string }>(
+      'SELECT COUNT(*)::text as count FROM users'
+    );
     if (Number(rows[0]?.count || 0) > 0) return;
+
+    const adminPassword = await bcrypt.hash(this.env.adminPassword, 10);
+    const cajeroPassword = await bcrypt.hash(this.env.cajeroPassword, 10);
 
     await this.pool.query(
       `
@@ -431,18 +437,8 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         ($7, $8, $9, $10, $11, $12, TRUE, NOW())
       `,
       [
-        '1',
-        'Admin',
-        'UTA',
-        'admin@utacafe.com',
-        'admin',
-        'Admin123!',
-        '2',
-        'Cajero',
-        'Prueba',
-        'cajero@utacafe.com',
-        'usuario',
-        'Cajero123!',
+        '1', 'Admin', 'UTA', 'admin@utacafe.com', 'admin', adminPassword,
+        '2', 'Cajero', 'Prueba', 'cajero@utacafe.com', 'usuario', cajeroPassword,
       ],
     );
   }
